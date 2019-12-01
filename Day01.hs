@@ -10,7 +10,6 @@ main =
             , part2 = sum . map totalFuel
             }
 
-fuel mass = maximum [0, mass `div` 3 - 2]
+fuel = max 0 . subtract 2 . (`div` 3)
 
-totalFuel 0 = 0
-totalFuel mass = fuel mass + totalFuel (fuel mass)
+totalFuel = sum . takeWhile (> 0) . tail . iterate fuel
