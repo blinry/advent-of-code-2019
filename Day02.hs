@@ -1,17 +1,28 @@
 module Day02 where
 
 import Common
+import Data.List
 import Data.List.Split
+import Data.Maybe
+import Data.Universe.Helpers
 
 main =
     aoc 2
         Solution
             { parse = map read . splitOn ","
-            , part1 = head . run . mod1202
-            , part2 = tbd
+            , part1 = head . run . modify (12, 02)
+            , part2 = checksum . findInput 19690720
             }
 
-mod1202 (a:_:_:xs) = a : 12 : 02 : xs
+checksum x = 100 * fst x + snd x
+
+findInput output program = fromJust $ find (hasOutput program output) allPairs
+
+hasOutput program output input = output == (head . run $ modify input program)
+
+allPairs = [0 ..] +*+ [0 ..]
+
+modify (noun, verb) (a:_:_:xs) = a : noun : verb : xs
 
 get (xs, ys) i = (xs ++ ys) !! i
 
