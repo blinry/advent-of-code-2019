@@ -34,18 +34,16 @@ put (xs, ys) i v
     | i < length xs = (put' xs i v, ys)
     | otherwise = (xs, put' ys (i - length xs) v)
 
-run xs = run' ([], xs)
-  where
-    run' (xs, []) = xs
-    run' (xs, ys) = run' $ shift $ op (xs, ys)
+run xs = fst $ until (null . snd) step ([], xs)
 
-op (xs, 99:ys) = (xs ++ 99 : ys, [])
-op (xs, ys@(1:a:b:c:_)) = put (xs, ys) c v
+step (xs, []) = (xs, [])
+step (xs, 99:ys) = (xs ++ 99 : ys, [])
+step state@(xs, ys@(op:a:b:c:_)) =
+    shift $ put state c $ operator $ map (get state) [a, b]
   where
-    v = get (xs, ys) a + get (xs, ys) b
-op (xs, ys@(2:a:b:c:_)) = put (xs, ys) c v
-  where
-    v = get (xs, ys) a * get (xs, ys) b
+    operator =
+        case op of
+            1 -> sum
+            2 -> product
 
 shift (xs, a:b:c:d:ys) = (xs ++ [a, b, c, d], ys)
-shift (xs, []) = (xs, [])
