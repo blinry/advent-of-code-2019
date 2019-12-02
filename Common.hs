@@ -13,7 +13,7 @@ data Solution a b c =
 aoc :: (Show b, Show c) => Int -> Solution a b c -> IO ()
 aoc n solution = do
     input <- readFile $ (printf "%02d" n) ++ ".txt"
-    let inputWithoutNewline = reverse . drop 1 . reverse $ input
+    let inputWithoutNewline = init input
     let problem = (parse solution) inputWithoutNewline
     putStrLn $ "Part 1: " ++ show (part1 solution $ problem)
     putStrLn $ "Part 2: " ++ show (part2 solution $ problem)
