@@ -36,9 +36,8 @@ put (xs, ys) i v
 
 run xs = fst $ until (null . snd) step ([], xs)
 
-step (xs, []) = (xs, [])
 step (xs, 99:ys) = (xs ++ 99 : ys, [])
-step state@(xs, ys@(op:a:b:c:_)) =
+step state@(xs, op:a:b:c:_) =
     shift $ put state c $ operator $ map (get state) [a, b]
   where
     operator =
