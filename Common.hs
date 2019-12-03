@@ -22,5 +22,5 @@ aoc n solution = do
 
 tbd x = "(not implemented)"
 
-freqs :: Ord a => [a] -> Map a Int
+freqs :: Ord a => [a] -> Map a Integer
 freqs = Map.fromListWith (+) . map ((flip (,)) 1)

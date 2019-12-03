@@ -28,3 +28,11 @@ main =
                          , points $ parseWire "U7,R6,D4,L4"
                          ]) `shouldBe`
                     V2 3 (-3)
+            it "part 2" $ do
+                (times . points . parseWire $ "R1") `shouldBe`
+                    [(V2 0 0, 0), (V2 1 0, 1)]
+                (crossingsTimes
+                     [ points $ parseWire "R8,U5,L5,D3"
+                     , points $ parseWire "U7,R6,D4,L4"
+                     ]) `shouldBe`
+                    [(V2 3 (-3), 40), (V2 6 (-5), 30)]

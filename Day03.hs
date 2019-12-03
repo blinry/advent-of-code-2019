@@ -6,6 +6,7 @@ import Data.List
 import Data.List.Split
 import qualified Data.Map as Map
 import Data.Map (Map)
+import Data.Maybe
 import Linear
 
 main =
@@ -13,7 +14,7 @@ main =
         Solution
             { parse = map parseWire . lines
             , part1 = manhattan . closest . crossings . map points
-            , part2 = tbd
+            , part2 = head . sort . map snd . crossingsTimes . map points
             }
 
 parseDirection (x:xs) =
@@ -41,8 +42,16 @@ points xs = prev ++ delete pos (range' (pos, pos + d))
 intersect' xs ys =
     freqs $ filter (\p -> Map.lookup p ys /= Nothing) (Map.keys xs)
 
-crossings xs = delete (V2 0 0) $ Map.keys (foldr1 intersect' $ map freqs xs)
+crossings = delete (V2 0 0) . Map.keys . foldr1 intersect' . map freqs
+
+crossingsTimes xs =
+    sumTimes timeses $ delete (V2 0 0) $ Map.keys (foldr1 intersect' $ timeses)
+  where
+    timeses = map Map.fromList (map times xs)
+    sumTimes ts = map (\p -> (p, sum $ map (fromJust . Map.lookup p) ts))
 
 manhattan (V2 x y) = abs x + abs y
 
 closest xs = head $ sortOn manhattan xs
+
+times xs = zip xs [0 ..]
