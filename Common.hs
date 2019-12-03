@@ -1,5 +1,7 @@
 module Common where
 
+import qualified Data.Map as Map
+import Data.Map (Map)
 import Linear.V2
 import Text.Printf
 
@@ -20,4 +22,5 @@ aoc n solution = do
 
 tbd x = "(not implemented)"
 
-type Point = V2 Int
+freqs :: Ord a => [a] -> Map a Int
+freqs = Map.fromListWith (+) . map ((flip (,)) 1)

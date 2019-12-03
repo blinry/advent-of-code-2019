@@ -20,7 +20,7 @@ main =
                     [ points $ parseWire "R8,U5,L5,D3"
                     , points $ parseWire "U7,R6,D4,L4"
                     ] `shouldBe`
-                    [V2 6 (-5), V2 3 (-3)]
+                    [V2 3 (-3), V2 6 (-5)]
                 manhattan (V2 3 (-4)) `shouldBe` 7
                 closest
                     (crossings

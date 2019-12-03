@@ -4,14 +4,15 @@ import Common
 import Data.Ix
 import Data.List
 import Data.List.Split
+import qualified Data.Map as Map
+import Data.Map (Map)
 import Linear
 
 main =
     aoc 3
         Solution
             { parse = map parseWire . lines
-            --, part1 = manhattan . closest . crossings . map points
-            , part1 = map (length . points)
+            , part1 = manhattan . closest . crossings . map points
             , part2 = tbd
             }
 
@@ -37,7 +38,10 @@ points xs = prev ++ delete pos (range' (pos, pos + d))
     pos = last prev
     d = last xs
 
-crossings xs = delete (V2 0 0) (foldr1 intersect xs)
+intersect' xs ys =
+    freqs $ filter (\p -> Map.lookup p ys /= Nothing) (Map.keys xs)
+
+crossings xs = delete (V2 0 0) $ Map.keys (foldr1 intersect' $ map freqs xs)
 
 manhattan (V2 x y) = abs x + abs y
 
