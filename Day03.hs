@@ -1,8 +1,6 @@
 module Day03 where
 
 import Common
-import Data.Ix
-import Data.List
 import Data.List.Split
 import qualified Data.Map as Map
 import Data.Map (Map)
@@ -13,43 +11,27 @@ import Linear
 main =
     aoc 3
         Solution
-            { parse = map parseWire . lines
-            , part1 =
-                  minimum .
-                  Set.map manhattan . crossings . tupelize . map points
-            , part2 = minimum . crossings2 . tupelize . map points2
+            { parse = map (scanl1 (+) . parseWire) . lines
+            , part1 = minimum . Set.map manhattan . crossings . map points
+            , part2 = minimum . crossings2 . map pointsWithTimes
             }
 
-tupelize [a, b] = (a, b)
-
 parseDirection (x:xs) =
+    replicate (read xs) $
     case x of
-        'R' -> V2 l 0
-        'L' -> V2 (-l) 0
-        'D' -> V2 0 l
-        'U' -> V2 0 (-l)
-  where
-    l = read xs
+        'R' -> V2 1 0
+        'L' -> V2 (-1) 0
+        'D' -> V2 0 1
+        'U' -> V2 0 (-1)
 
-parseWire = map parseDirection . splitOn ","
+parseWire = concatMap parseDirection . splitOn ","
 
-range' (a, b)
-    | a <= b = range (a, b)
-    | otherwise = reverse $ range (b, a)
+points s = Set.fromList s
 
-points xs = Set.fromList $ points' xs
+pointsWithTimes s = Map.fromListWith min $ zip s [1 ..]
 
-points2 xs = Map.fromListWith min $ zip (points' xs) [1 ..]
+crossings = foldr1 Set.intersection
 
-points' [x] = [x]
-points' xs = prev ++ delete pos (range' (pos, pos + d))
-  where
-    prev = points' (init xs)
-    pos = last prev
-    d = last xs
-
-crossings (xs, ys) = Set.intersection xs ys
-
-crossings2 (xs, ys) = Map.intersectionWith (+) xs ys
+crossings2 = foldr1 (Map.intersectionWith (+))
 
 manhattan (V2 x y) = abs x + abs y
