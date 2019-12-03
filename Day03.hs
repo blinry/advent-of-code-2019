@@ -6,16 +6,21 @@ import Data.List
 import Data.List.Split
 import qualified Data.Map as Map
 import Data.Map (Map)
-import Data.Maybe
+import qualified Data.Set as Set
+import Data.Set (Set)
 import Linear
 
 main =
     aoc 3
         Solution
             { parse = map parseWire . lines
-            , part1 = manhattan . closest . crossings . map points
-            , part2 = head . sort . map snd . crossingsTimes . map points
+            , part1 =
+                  minimum .
+                  Set.map manhattan . crossings . tupelize . map points
+            , part2 = minimum . crossings2 . tupelize . map points2
             }
+
+tupelize [a, b] = (a, b)
 
 parseDirection (x:xs) =
     case x of
@@ -32,26 +37,19 @@ range' (a, b)
     | a <= b = range (a, b)
     | otherwise = reverse $ range (b, a)
 
-points [] = [V2 0 0]
-points xs = prev ++ delete pos (range' (pos, pos + d))
+points xs = Set.fromList $ points' xs
+
+points2 xs = Map.fromListWith min $ zip (points' xs) [1 ..]
+
+points' [x] = [x]
+points' xs = prev ++ delete pos (range' (pos, pos + d))
   where
-    prev = points (init xs)
+    prev = points' (init xs)
     pos = last prev
     d = last xs
 
-intersect' xs ys =
-    freqs $ filter (\p -> Map.lookup p ys /= Nothing) (Map.keys xs)
+crossings (xs, ys) = Set.intersection xs ys
 
-crossings = delete (V2 0 0) . Map.keys . foldr1 intersect' . map freqs
-
-crossingsTimes xs =
-    sumTimes timeses $ delete (V2 0 0) $ Map.keys (foldr1 intersect' $ timeses)
-  where
-    timeses = map Map.fromList (map times xs)
-    sumTimes ts = map (\p -> (p, sum $ map (fromJust . Map.lookup p) ts))
+crossings2 (xs, ys) = Map.intersectionWith (+) xs ys
 
 manhattan (V2 x y) = abs x + abs y
-
-closest xs = head $ sortOn manhattan xs
-
-times xs = zip xs [0 ..]
