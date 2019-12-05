@@ -32,15 +32,22 @@ memory c i = Seq.index (mem c) i
 step c@(Computer {pos = p, mem = m, input = inp, output = out}) =
     c {pos = p', mem = m', running = r', input = inp', output = out'}
   where
-    op = Seq.index m p
+    (op, modes) = opParse $ Seq.index m p
     size = opSize op
+    modes' = modes ++ replicate (size - length modes) 0
+    modes'' =
+        case modes' of
+            [] -> []
+            xs -> init xs ++ [1]
     args = map (Seq.index m . (+ p)) [1 .. size]
+    argsWithModes = zip args modes''
+    args' = map (\(arg, mode) -> [Seq.index m arg, arg] !! mode) $ argsWithModes
     m' =
         case op of
             1 -> Seq.update c (a + b) m
-                where [a, b, c] = args
+                where [a, b, c] = args'
             2 -> Seq.update c (a * b) m
-                where [a, b, c] = args
+                where [a, b, c] = args'
             3 -> Seq.update a i m
                 where [a] = args
                       i = Seq.index inp 0
@@ -70,6 +77,13 @@ opSize op =
         3 -> 1
         4 -> 1
         99 -> 0
+
+opParse :: Int -> (Int, [Int])
+opParse code = (op, modes)
+  where
+    op = read $ reverse $ take 2 $ reverse $ s
+    modes = reverse $ map (read . (: "")) $ take (length s - 2) $ s
+    s = show code
 
 main =
     aoc 5
