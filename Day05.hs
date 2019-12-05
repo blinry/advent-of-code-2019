@@ -17,6 +17,7 @@ data Computer =
         , input :: Seq Int
         , output :: Seq Int
         }
+    deriving (Show)
 
 fromList xs =
     Computer
@@ -37,7 +38,7 @@ step c@(Computer {pos = p, mem = m, input = inp, output = out}) =
     modes' = modes ++ replicate (size - length modes) 0
     -- For some ops, always put the last operand in address mode.
     modes''
-        | op `elem` [1, 2, 3] = init modes' ++ [1]
+        | op `elem` [1, 2, 3, 7, 8] = init modes' ++ [1]
         | otherwise = modes'
     args = map (Seq.index m . (+ p)) [1 .. size]
     argsWithModes = zip args modes''
@@ -49,12 +50,41 @@ step c@(Computer {pos = p, mem = m, input = inp, output = out}) =
             2 -> Seq.update c (a * b) m
                 where [a, b, c] = args'
             3 -> Seq.update a i m
-                where [a] = args
+                where [a] = args'
                       i = Seq.index inp 0
-            4 -> m
-            99 -> m
+            7 ->
+                Seq.update
+                    c
+                    (case a < b of
+                         True -> 1
+                         False -> 0)
+                    m
+                where [a, b, c] = args'
+            8 ->
+                Seq.update
+                    c
+                    (case a == b of
+                         True -> 1
+                         False -> 0)
+                    m
+                where [a, b, c] = args'
+            _ -> m
     r' = op /= 99
-    p' = p + size + 1
+    p' =
+        case op of
+            5 ->
+                case a of
+                    0 -> fallback
+                    _ -> b
+                where [a, b] = args'
+            6 ->
+                case a of
+                    0 -> b
+                    _ -> fallback
+                where [a, b] = args'
+            _ -> fallback
+      where
+        fallback = p + size + 1
     inp' =
         case op of
             1 -> Seq.deleteAt 0 inp
@@ -76,6 +106,10 @@ opSize op =
         2 -> 3
         3 -> 1
         4 -> 1
+        5 -> 2
+        6 -> 2
+        7 -> 3
+        8 -> 3
         99 -> 0
 
 opParse :: Int -> (Int, [Int])
@@ -90,5 +124,5 @@ main =
         Solution
             { parse = Day05.fromList . map read . splitOn ","
             , part1 = run [1]
-            , part2 = tbd
+            , part2 = run [5]
             }
