@@ -35,10 +35,10 @@ step c@(Computer {pos = p, mem = m, input = inp, output = out}) =
     (op, modes) = opParse $ Seq.index m p
     size = opSize op
     modes' = modes ++ replicate (size - length modes) 0
-    modes'' =
-        case modes' of
-            [] -> []
-            xs -> init xs ++ [1]
+    -- For some ops, always put the last operand in address mode.
+    modes''
+        | op `elem` [1, 2, 3] = init modes' ++ [1]
+        | otherwise = modes'
     args = map (Seq.index m . (+ p)) [1 .. size]
     argsWithModes = zip args modes''
     args' = map (\(arg, mode) -> [Seq.index m arg, arg] !! mode) $ argsWithModes
@@ -62,10 +62,10 @@ step c@(Computer {pos = p, mem = m, input = inp, output = out}) =
     out' =
         case op of
             4 -> out Seq.|> a
-                where a = 42
+                where a = head args'
             _ -> out
 
-run c inp = toList $ output c''
+run inp c = toList $ output c''
   where
     c' = c {input = Seq.fromList inp}
     c'' = until (not . running) step c'
@@ -89,6 +89,6 @@ main =
     aoc 5
         Solution
             { parse = Day05.fromList . map read . splitOn ","
-            , part1 = tbd
+            , part1 = run [1]
             , part2 = tbd
             }
