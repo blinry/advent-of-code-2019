@@ -30,27 +30,34 @@ fromList xs =
 
 memory c i = Seq.index (mem c) i
 
-step c@(Computer {pos = p, mem = m, input = inp, output = out}) =
-    c {pos = p', mem = m', running = r', input = inp', output = out'}
+getArgs :: Computer -> [Int]
+getArgs Computer {pos = p, mem = m} =
+    map (\(arg, mode) -> [Seq.index m arg, arg] !! mode) $ argsWithModes
   where
     (op, modes) = opParse $ Seq.index m p
     size = opSize op
-    modes' = modes ++ replicate (size - length modes) 0
+    allModes = modes ++ replicate (size - length modes) 0
     -- For some ops, always put the last operand in address mode.
-    modes''
-        | op `elem` [1, 2, 3, 7, 8] = init modes' ++ [1]
-        | otherwise = modes'
-    args = map (Seq.index m . (+ p)) [1 .. size]
-    argsWithModes = zip args modes''
-    args' = map (\(arg, mode) -> [Seq.index m arg, arg] !! mode) $ argsWithModes
+    fixedModes
+        | op `elem` [1, 2, 3, 7, 8] = init allModes ++ [1]
+        | otherwise = allModes
+    directArgs = map (Seq.index m) [p + 1 .. p + size]
+    argsWithModes = zip directArgs fixedModes
+
+step c@(Computer {pos = p, mem = m, input = inp, output = out}) =
+    Computer {pos = p', mem = m', running = r', input = inp', output = out'}
+  where
+    (op, modes) = opParse $ Seq.index m p
+    args = getArgs c
+    size = opSize op
     m' =
         case op of
             1 -> Seq.update c (a + b) m
-                where [a, b, c] = args'
+                where [a, b, c] = args
             2 -> Seq.update c (a * b) m
-                where [a, b, c] = args'
+                where [a, b, c] = args
             3 -> Seq.update a i m
-                where [a] = args'
+                where [a] = args
                       i = Seq.index inp 0
             7 ->
                 Seq.update
@@ -59,7 +66,7 @@ step c@(Computer {pos = p, mem = m, input = inp, output = out}) =
                          True -> 1
                          False -> 0)
                     m
-                where [a, b, c] = args'
+                where [a, b, c] = args
             8 ->
                 Seq.update
                     c
@@ -67,7 +74,7 @@ step c@(Computer {pos = p, mem = m, input = inp, output = out}) =
                          True -> 1
                          False -> 0)
                     m
-                where [a, b, c] = args'
+                where [a, b, c] = args
             _ -> m
     r' = op /= 99
     p' =
@@ -76,41 +83,30 @@ step c@(Computer {pos = p, mem = m, input = inp, output = out}) =
                 case a of
                     0 -> fallback
                     _ -> b
-                where [a, b] = args'
+                where [a, b] = args
             6 ->
                 case a of
                     0 -> b
                     _ -> fallback
-                where [a, b] = args'
+                where [a, b] = args
             _ -> fallback
       where
         fallback = p + size + 1
     inp' =
         case op of
-            1 -> Seq.deleteAt 0 inp
+            3 -> Seq.deleteAt 0 inp
             _ -> inp
     out' =
         case op of
             4 -> out Seq.|> a
-                where a = head args'
+                where a = head args
             _ -> out
 
-run inp c = toList $ output c''
-  where
-    c' = c {input = Seq.fromList inp}
-    c'' = until (not . running) step c'
+run inp c =
+    toList $ output $ until (not . running) step c {input = Seq.fromList inp}
 
-opSize op =
-    case op of
-        1 -> 3
-        2 -> 3
-        3 -> 1
-        4 -> 1
-        5 -> 2
-        6 -> 2
-        7 -> 3
-        8 -> 3
-        99 -> 0
+opSize 99 = 0
+opSize op = [3, 3, 1, 1, 2, 2, 3, 3] !! (op - 1)
 
 opParse :: Int -> (Int, [Int])
 opParse code = (op, modes)
