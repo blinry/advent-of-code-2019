@@ -12,7 +12,7 @@ main =
             it "part1" $ do
                 parseOrbits "a)b" `shouldBe` M.fromList [("a", ["b"])]
                 parseOrbits "a)b\nb)c\na)c" `shouldBe`
-                    M.fromList [("a", ["c", "b"]), ("b", ["c"])]
+                    M.fromList [("a", ["b", "c"]), ("b", ["c"])]
                 orbits (parseOrbits "COM)a") `shouldBe` 1
                 orbits (parseOrbits "COM)a\nCOM)b") `shouldBe` 2
                 orbits (parseOrbits "COM)a\nCOM)b\nb)c\nb)d") `shouldBe` 6
@@ -20,13 +20,8 @@ main =
                     (parseOrbits
                          "COM)B\nB)C\nC)D\nD)E\nE)F\nB)G\nG)H\nD)I\nE)J\nJ)K\nK)L") `shouldBe`
                     42
-            it "part1" $ do
-                reverseOrbits (parseOrbits "a)b\na)c") `shouldBe`
-                    M.fromList [("b", "a"), ("c", "a")]
             it "path" $ do
-                let m =
-                        reverseOrbits $
-                        parseOrbits "COM)a\nCOM)b\nb)x\nx)c\nb)d"
+                let m = parseReverseOrbits "COM)a\nCOM)b\nb)x\nx)c\nb)d"
                 let path1 = path m "d"
                 let path2 = path m "c"
                 path1 `shouldBe` ["COM", "b"]
@@ -34,7 +29,6 @@ main =
                 commonPrefix path1 path2 `shouldBe` ["COM", "b"]
             it "part2" $ do
                 let m =
-                        reverseOrbits $
-                        parseOrbits
+                        parseReverseOrbits
                             "COM)B\nB)C\nC)D\nD)E\nE)F\nB)G\nG)H\nD)I\nE)J\nJ)K\nK)L\nK)YOU\nI)SAN"
                 minTransfers "YOU" "SAN" m `shouldBe` 4

@@ -9,33 +9,29 @@ import Data.Maybe
 main =
     aoc 6
         Solution
-            { parse = parseOrbits
-            , part1 = orbits
-            , part2 = minTransfers "YOU" "SAN" . reverseOrbits
+            { parse = id -- This solution uses different parsing per part, so we don't do that here.
+            , part1 = orbits . parseOrbits
+            , part2 = minTransfers "YOU" "SAN" . parseReverseOrbits
             }
 
 parseOrbits =
-    foldl (\m ([a, b]) -> M.alter (Just . (b :) . maybe [] id) a m) M.empty .
+    foldr (\[a, b] m -> M.alter (Just . (b :) . maybe [] id) a m) M.empty .
     map (splitOn ")") . lines
 
+parseReverseOrbits =
+    foldr (\[a, b] m -> M.insert b a m) M.empty . map (splitOn ")") . lines
+
 orbits m = orbits' m 0 "COM"
-
-orbits' m p x = (p +) . sum . map (orbits' m (p + 1)) $ children
   where
-    children = maybe [] id (M.lookup x m)
-
-reverseOrbits m = M.foldlWithKey f M.empty m
-  where
-    f m' parent children = foldl (\m'' c -> M.insert c parent m'') m' children
+    orbits' m p x =
+        (p +) . sum . map (orbits' m (p + 1)) $ M.findWithDefault [] x m
 
 path m x = reverse $ path' m x
-
-path' m x =
-    case parent of
-        Nothing -> []
-        Just x -> x : (path' m x)
   where
-    parent = M.lookup x m
+    path' m x =
+        case M.lookup x m of
+            Nothing -> []
+            Just x -> x : (path' m x)
 
 commonPrefix p1 p2 = map fst . takeWhile (\(a, b) -> a == b) $ zip p1 p2
 
