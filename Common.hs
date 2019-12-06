@@ -25,7 +25,7 @@ benchmark action = do
     end <- getTime Monotonic
     fprint (" (" % timeSpecs % ")\n") start end
 
-aoc :: (Show a, Show b, Show c) => Int -> Solution a b c -> IO ()
+aoc :: (Show b, Show c) => Int -> Solution a b c -> IO ()
 aoc n solution = do
     input <- readFile $ (printf "%02d" n) ++ ".txt"
     let inputWithoutNewline = init input
@@ -36,6 +36,7 @@ aoc n solution = do
     benchmark $ putStr $ "Part 1: " ++ show (part1 solution $ problem)
     benchmark $ putStr $ "Part 2: " ++ show (part2 solution $ problem)
 
+tbd :: a -> String
 tbd x = "(not implemented)"
 
 freqs :: Ord a => [a] -> Map a Integer
