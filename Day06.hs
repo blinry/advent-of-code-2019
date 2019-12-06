@@ -15,11 +15,12 @@ main =
             }
 
 parseOrbits =
-    foldr (\[a, b] m -> M.alter (Just . (b :) . maybe [] id) a m) M.empty .
-    map (splitOn ")") . lines
+    M.unionsWith (++) .
+    map (M.map (: []) . (uncurry M.singleton) . tupelize . splitOn ")") . lines
 
-parseReverseOrbits =
-    foldr (\[a, b] m -> M.insert b a m) M.empty . map (splitOn ")") . lines
+parseReverseOrbits = M.fromList . map (tupelize . reverse . splitOn ")") . lines
+
+tupelize [a, b] = (a, b)
 
 orbits m = orbits' m 0 "COM"
   where
