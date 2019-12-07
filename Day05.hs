@@ -105,6 +105,13 @@ step c@(Computer {pos = p, mem = m, input = inp, output = out}) =
 run inp c =
     toList $ output $ until (not . running) step c {input = Seq.fromList inp}
 
+nextOutput inp c =
+    (\c -> (c, Seq.lookup 0 (output c))) $
+    until
+        (\c -> (not . Seq.null . output $ c) || (not . running $ c))
+        step
+        c {input = (input c) Seq.|> inp, output = Seq.empty}
+
 opSize 99 = 0
 opSize op = [3, 3, 1, 1, 2, 2, 3, 3] !! (op - 1)
 
