@@ -10,7 +10,7 @@ main =
         Solution
             { parse = layers . map (read . singleton)
             , part1 = onesTimesTwos . fewestZeroes
-            , part2 = Layer . foldr1 mergeLayers
+            , part2 = Layer . mergeLayers
             }
 
 layers = chunksOf $ 25 * 6
@@ -21,11 +21,7 @@ fewestZeroes = minimumOn $ count 0
 
 onesTimesTwos = product . (map count [1, 2] <*>) . pure
 
-mergeLayers = (map mergePixels .) . zip
-
-mergePixels (0, _) = 0
-mergePixels (1, _) = 1
-mergePixels (2, p) = p
+mergeLayers = map (head . filter (/= 2)) . transpose
 
 data Layer =
     Layer [Int]
