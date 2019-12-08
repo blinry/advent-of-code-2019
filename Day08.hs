@@ -3,17 +3,33 @@ module Day08 where
 import Common
 import Data.List
 import Data.List.Extra
+import Data.List.Singleton
 
 main =
     aoc 8
         Solution
-            { parse = map (read . (: []))
-            , part1 = onesTimesTwos . fewestZeroes . layers
-            , part2 = tbd
+            { parse = layers . map (read . singleton)
+            , part1 = onesTimesTwos . fewestZeroes
+            , part2 = Layer . foldr1 mergeLayers
             }
 
-layers = chunksOf (25 * 6)
+layers = chunksOf $ 25 * 6
 
-fewestZeroes = minimumOn (length . filter (== 0))
+count = (length .) . filter . (==)
 
-onesTimesTwos l = product $ map (\n -> length $ filter (== n) l) [1, 2]
+fewestZeroes = minimumOn $ count 0
+
+onesTimesTwos = product . (map count [1, 2] <*>) . pure
+
+mergeLayers = (map mergePixels .) . zip
+
+mergePixels (0, _) = 0
+mergePixels (1, _) = 1
+mergePixels (2, p) = p
+
+data Layer =
+    Layer [Int]
+
+instance Show Layer where
+    show (Layer l) =
+        concat . map ('\n' :) . chunksOf 25 . map ([' ', '#'] !!) $ l
