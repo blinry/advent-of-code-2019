@@ -46,8 +46,8 @@ getArgs Computer {pos = p, offset = o, mem = m} =
     allModes = modes ++ replicate (size - length modes) 0
     -- For some ops, never use "index" above
     fixedModes
-        | op `elem` [1, 2, 3, 7, 8] && last allModes == 0 = init allModes ++ [1]
-        | op `elem` [1, 2, 3, 7, 8] && last allModes == 2 = init allModes ++ [3]
+        | op `elem` [1, 2, 3, 7, 8] && last allModes `elem` [0, 2] =
+            init allModes ++ [(last allModes) + 1]
         | otherwise = allModes
     directArgs = map (index m) [p + 1 .. p + size]
     argsWithModes = zip directArgs fixedModes
@@ -147,5 +147,5 @@ main =
         Solution
             { parse = Day09.fromList . map read . splitOn ","
             , part1 = run [1]
-            , part2 = tbd
+            , part2 = run [2]
             }
