@@ -1,23 +1,28 @@
 module Day10 where
 
 import Common
+import Control.Lens.Indexed
 import Data.Fixed
 import Data.List.Extra
 import qualified Data.Set as S
 import Data.Set (Set)
 import Linear.V2
+import Linear.Vector
 
 main =
     aoc 10
         Solution {parse = parseField, part1 = mostVisibleCoord, part2 = bet 200}
 
-parseField = S.unions . map (\(y, l) -> parseLine y l) . zip [0 ..] . lines
+parseField = ifoldMap parseLine . lines
 
-parseLine y s = S.fromList [V2 x y | (c, x) <- zip s [0 ..], c == '#']
+parseLine y = ifoldMap (parseChar y)
 
-between a b = map (\i -> a + fmap (* i) step) [1 .. (n - 1)]
+parseChar y x '#' = S.singleton (V2 x y)
+parseChar _ _ _ = S.empty
+
+between a b = map ((+ a) . (step ^*)) [1 .. (n - 1)]
   where
-    d = (b - a)
+    d = b - a
     V2 dx dy = abs d
     n = gcd dx dy
     step = fmap (`div` n) d
